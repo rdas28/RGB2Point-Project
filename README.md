@@ -57,7 +57,6 @@ The model processes RGB images through a series of convolutional layers, followe
 ### 1. Clone the repository
 
 ```bash
-Copy
 git clone https://github.com/yourusername/RGB2Point.git
 cd RGB2Point
 ```
@@ -65,7 +64,6 @@ cd RGB2Point
 ### 2. Install dependencies
 
 ```bash
-Copy
 pip install -r requirements.txt
 ```
 
@@ -78,7 +76,6 @@ Download the Pix3D dataset and place it in the datasets/pix3d folder. Make sure 
 ### 4. Run the model
 
 ```bash
-Copy
 python3 eval.py
 This will evaluate the model on the Pix3D dataset, generating point clouds and saving them to the outputs/predictions folder.
 ```
@@ -86,11 +83,11 @@ This will evaluate the model on the Pix3D dataset, generating point clouds and s
 ## Test Coverage
 
 This repo includes tests for:
-->Real-world dataset: Pix3D (wardrobe, chair, etc.).
+-> Real-world dataset: Pix3D (wardrobe, chair, etc.).
 
-->Synthetic data for training and evaluation purposes.
+-> Synthetic data for training and evaluation purposes.
 
-->Generated 3D point clouds are saved as .ply files and can be visualized using tools like Open3D.
+-> Generated 3D point clouds are saved as .ply files and can be visualized using tools like Open3D.
 
 ### Summary of Test Scenarios
 
@@ -103,11 +100,11 @@ After running the evaluation, you will find generated point clouds in outputs/pr
 
 Static 3D Point Cloud:
 Visualize the predicted 3D point cloud:
-->Predicted 3D Point Cloud 1
+-> Predicted 3D Point Cloud 1
 
-->Predicted 3D Point Cloud 2
+-> Predicted 3D Point Cloud 2
 
-->Predicted 3D Point Cloud 3
+-> Predicted 3D Point Cloud 3
 
 ### Rotating 3D Point Cloud GIF:
 GIF animation showing the rotating 3D point cloud for better perspective.
@@ -116,9 +113,9 @@ GIF animation showing the rotating 3D point cloud for better perspective.
 You can adjust the following parameters in the eval.py file or modify them in the dataset and model configurations:
 ->num_points: The number of points in the generated point cloud.
 
-->category: The category of the object (e.g., 'wardrobe', 'chair') to filter the dataset.
+-> category: The category of the object (e.g., 'wardrobe', 'chair') to filter the dataset.
 
-->image_size: Size of the input image (default: 224x224).
+-> image_size: Size of the input image (default: 224x224).
 
 ---
 
@@ -173,12 +170,15 @@ for image, _ in pix3d_dataset:
 ## Q&A
 
 **What does the model do?**
+
 → This model takes RGB images as input and generates corresponding 3D point clouds representing the objects in those images. It is useful for applications like 3D object detection and reconstruction.
 
 **How did you test your model?**
+
 → We tested the model using both synthetic and real datasets, visualized the output point clouds, and compared the results with ground truth data from Pix3D.
 
 **What are the adjustable parameters?**
+
 → Key parameters include num_points (number of points per point cloud), category (object class), and image_size (input image dimensions).
 
 ---
