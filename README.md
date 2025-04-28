@@ -1,4 +1,5 @@
-RGB2Point: 3D Point Cloud Generation from RGB Images
+Project: RGB2Point – 3D Point Cloud Generation from RGB Images
+
 Table of Contents
 Introduction
 
