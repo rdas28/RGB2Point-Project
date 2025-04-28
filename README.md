@@ -2,7 +2,7 @@
 
 ---
 
-##Table of Contents
+## Table of Contents
 1. [Introduction](#introduction)
 2. [Overview](#overview)
 3. [How the Model Works](#how-the-model-works)
@@ -29,9 +29,12 @@ This repository contains an implementation of a deep learning model, RGB2Point, 
 The RGB2Point model converts RGB images to 3D point clouds using a deep learning model based on convolutional neural networks (CNNs). The model generates point clouds with 1024 points per image using a training pipeline on datasets like Pix3D. This repository includes:
 
 - The RGB2Point model for image-to-point cloud conversion.
--Tools for visualizing point clouds.
--Preprocessing scripts for Pix3D data and synthetic data generation.
--Evaluation on real-world (Pix3D) and synthetic datasets.
+  
+- Tools for visualizing point clouds.
+  
+- Preprocessing scripts for Pix3D data and synthetic data generation.
+  
+- Evaluation on real-world (Pix3D) and synthetic datasets.
 
 ---
 
@@ -40,8 +43,11 @@ The RGB2Point model converts RGB images to 3D point clouds using a deep learning
 The model processes RGB images through a series of convolutional layers, followed by a final layer that generates the 3D coordinates for each point in the point cloud. The model output is a 1024x3 tensor representing the 3D coordinates of the predicted point cloud. Here’s how it works:
 
 1.Input: A 2D RGB image (e.g., from the Pix3D dataset).
+
 2.Model Architecture: The image is passed through a CNN to extract features.
+
 3.Point Cloud Generation: A final fully connected layer maps the extracted features to a 3D space (1024 points).
+
 4.Output: The result is a 3D point cloud that corresponds to the object in the input image.
 
 ---
@@ -81,7 +87,9 @@ This will evaluate the model on the Pix3D dataset, generating point clouds and s
 
 This repo includes tests for:
 ->Real-world dataset: Pix3D (wardrobe, chair, etc.).
+
 ->Synthetic data for training and evaluation purposes.
+
 ->Generated 3D point clouds are saved as .ply files and can be visualized using tools like Open3D.
 
 ### Summary of Test Scenarios
@@ -96,7 +104,9 @@ After running the evaluation, you will find generated point clouds in outputs/pr
 Static 3D Point Cloud:
 Visualize the predicted 3D point cloud:
 ->Predicted 3D Point Cloud 1
+
 ->Predicted 3D Point Cloud 2
+
 ->Predicted 3D Point Cloud 3
 
 ### Rotating 3D Point Cloud GIF:
@@ -105,7 +115,9 @@ GIF animation showing the rotating 3D point cloud for better perspective.
 ### Adjustable Parameters
 You can adjust the following parameters in the eval.py file or modify them in the dataset and model configurations:
 ->num_points: The number of points in the generated point cloud.
+
 ->category: The category of the object (e.g., 'wardrobe', 'chair') to filter the dataset.
+
 ->image_size: Size of the input image (default: 224x224).
 
 ---
@@ -141,14 +153,20 @@ for image, _ in pix3d_dataset:
 ## Limitations & Future Work
 
 ### Known Limitations:
--Limited to point cloud generation for specific categories in the dataset.
--Performance may degrade for certain complex objects or cluttered backgrounds.
+
+- Limited to point cloud generation for specific categories in the dataset.
+  
+- Performance may degrade for certain complex objects or cluttered backgrounds.
 
 ### Possible Improvements:
--Add multi-category support.
--Improve point cloud density and visualization.
--Explore the use of other 3D datasets.
--Implement real-time prediction capabilities.
+
+- Add multi-category support.
+
+- Improve point cloud density and visualization.
+  
+- Explore the use of other 3D datasets.
+  
+- Implement real-time prediction capabilities.
 
 ---
 
