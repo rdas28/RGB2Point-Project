@@ -1,4 +1,4 @@
-#Project: RGB2Point – 3D Point Cloud Generation from RGB Images
+# Project: RGB2Point – 3D Point Cloud Generation from RGB Images
 
 ---
 
@@ -18,13 +18,13 @@
 
 ---
 
-##Introduction
+## Introduction
 
 This repository contains an implementation of a deep learning model, RGB2Point, designed to convert RGB images into 3D point clouds. The model generates 3D representations of objects from images, useful in various applications such as robotics, AR/VR, and 3D object recognition.
 
 ---
 
-##Overview
+## Overview
 
 The RGB2Point model converts RGB images to 3D point clouds using a deep learning model based on convolutional neural networks (CNNs). The model generates point clouds with 1024 points per image using a training pipeline on datasets like Pix3D. This repository includes:
 
@@ -35,7 +35,7 @@ The RGB2Point model converts RGB images to 3D point clouds using a deep learning
 
 ---
 
-##How the Model Works
+## How the Model Works
 
 The model processes RGB images through a series of convolutional layers, followed by a final layer that generates the 3D coordinates for each point in the point cloud. The model output is a 1024x3 tensor representing the 3D coordinates of the predicted point cloud. Here’s how it works:
 
@@ -46,7 +46,7 @@ The model processes RGB images through a series of convolutional layers, followe
 
 ---
 
-##Getting Started
+## Getting Started
 
 ### 1. Clone the repository
 
@@ -138,7 +138,7 @@ for image, _ in pix3d_dataset:
 ```
 ---
 
-##Limitations & Future Work
+## Limitations & Future Work
 
 ### Known Limitations:
 -Limited to point cloud generation for specific categories in the dataset.
