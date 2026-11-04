@@ -1,0 +1,10 @@
+torch==1.13.1
+torchvision==0.14.1
+numpy==1.23.5
+PILLOW==9.4.0
+open3d==0.15.1
+matplotlib==3.6.3
+trimesh==3.8.13
+imageio==2.37.0
+scipy==1.9.3
+timm==0.6.13

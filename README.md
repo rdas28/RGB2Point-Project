@@ -1,162 +1,153 @@
-RGB2Point: 3D Point Cloud Generation from RGB Images
-Table of Contents
-Introduction
+# RGB2Point: Single-View 3D Point Cloud Reconstruction
 
-Overview
+A single RGB image to **1,024 XYZ points** using a frozen pretrained Vision Transformer and a learnable-query Transformer decoder. The final v4 experiments use procedurally generated chairs and tables with **object-disjoint** train, validation, and test splits.
 
-How the Model Works
+## Final held-out results
 
-Getting Started
+| Metric | Overall | Chair | Table |
+|---|---:|---:|---:|
+| Images | 16 | 8 | 8 |
+| Chamfer Distance (lower is better) | **0.094976** | 0.078896 | 0.111056 |
+| Predicted → ground truth | 0.046415 | 0.040590 | 0.052239 |
+| Ground truth → predicted | 0.048561 | 0.038307 | 0.058816 |
+| Coverage @ 0.02 | 10.18% | 13.21% | 7.15% |
+| Coverage @ 0.05 | **63.04%** | 77.93% | 48.16% |
+| Coverage @ 0.10 | 93.66% | 99.66% | 87.67% |
+| Relative bounding-box dimension error | 11.19% | 11.69% | 10.69% |
 
-Test Coverage
+**Test scope:** Two unseen procedural objects (one chair and one table), with eight rendered viewpoints each. These are not results on unseen real-world photographs or arbitrary object categories. The checkpoint was chosen using validation data, not the test set.
 
-Summary of Test Scenarios
+## Reconstruction examples
 
-Visual Output Samples
+![Held-out chair and table: RGB input, predicted point cloud, and ground truth](v4/outputs/final_test_reconstructions.png)
 
-Adjustable Parameters
+The predicted point clouds capture approximate chair/table structure, but points remain diffuse and fine geometry is not reliably recovered.
 
-Basic Usage Example
+## Architecture
 
-Limitations & Future Work
+```text
+RGB image (224 × 224 × 3)
+  → frozen pretrained ViT-B/16 (`timm`: vit_base_patch16_224)
+  → 196 patch tokens × 768 features (CLS token discarded)
+  → linear projection 768 → 256
+  → Transformer decoder, cross-attending to image patches
+      • 1,024 learnable 256-D point queries
+      • 2 decoder layers, 4 attention heads, 512-D feedforward
+  → LayerNorm → Linear(256,128) → GELU → Linear(128,3)
+  → predicted point cloud [batch, 1024, 3]
+```
 
-Q&A
+The pretrained image encoder is frozen and kept in evaluation mode. The projection, point queries, decoder, and output head are trained. See [`v4/models/rgb2point_v4.py`](v4/models/rgb2point_v4.py).
 
-Team Members
+## Procedural dataset
 
-Introduction
-This repository contains an implementation of a deep learning model, RGB2Point, designed to convert RGB images into 3D point clouds. The model generates 3D representations of objects from images, useful in various applications such as robotics, AR/VR, and 3D object recognition.
+Blender-based scripts generate **10 chair meshes and 10 table meshes**, sample **1,024 surface points per mesh**, and render **eight RGB views per object** (160 images total).
 
-Overview
-The RGB2Point model converts RGB images to 3D point clouds using a deep learning model based on convolutional neural networks (CNNs). The model generates point clouds with 1024 points per image using a training pipeline on datasets like Pix3D. This repository includes:
+| Split | Unique objects | RGB images |
+|---|---:|---:|
+| Train | 14 | 112 |
+| Validation | 4 | 32 |
+| Test | 2 | 16 |
 
-The RGB2Point model for image-to-point cloud conversion.
+All views of a given object remain in the same split. Main dataset scripts:
 
-Tools for visualizing point clouds.
+- `v4/scripts/generate_procedural_meshes.py`
+- `v4/scripts/sample_procedural_points.py`
+- `v4/scripts/render_procedural_multiview.py`
+- `v4/scripts/create_procedural_splits.py`
+- `v4/scripts/dataset_v4.py`
 
-Preprocessing scripts for Pix3D data and synthetic data generation.
+The generated dataset is not committed to Git. Current scripts expect metadata at `../datasets/rgb2point_v4/metadata/procedural_{train,val,test}.json` relative to the repository root. The dataset's internal image/point-cloud paths must also match the metadata and loader. Blender is required to regenerate the meshes and renders.
 
-Evaluation on real-world (Pix3D) and synthetic datasets.
+## Training and model selection
 
-How the Model Works
-The model processes RGB images through a series of convolutional layers, followed by a final layer that generates the 3D coordinates for each point in the point cloud. The model output is a 1024x3 tensor representing the 3D coordinates of the predicted point cloud. Here’s how it works:
+| Setting | Value |
+|---|---|
+| Epochs | 50 |
+| Batch size | 2 |
+| Optimizer | AdamW |
+| Learning rate | `1e-4` |
+| Random seed | 42 |
+| Input preprocessing | Bicubic resize to 224×224; tensor normalization with mean/std `(0.5,0.5,0.5)` |
+| Training loss | Coverage-weighted Chamfer, weight 2.0 on GT → prediction |
+| Checkpoint criterion | Minimum **unweighted** validation Chamfer Distance |
+| Compute | Apple Silicon / PyTorch MPS; CPU fallback in scripts |
 
-Input: A 2D RGB image (e.g., from the Pix3D dataset).
+For predicted cloud P and ground-truth cloud G, the evaluation metric is the sum of the mean nearest-neighbor Euclidean distances in both directions:
 
-Model Architecture: The image is passed through a CNN to extract features.
+```text
+CD(P,G) = mean_{p∈P} min_{g∈G} ||p−g||₂
+        + mean_{g∈G} min_{p∈P} ||g−p||₂
 
-Point Cloud Generation: A final fully connected layer maps the extracted features to a 3D space (1024 points).
+Training loss = predicted→GT + 2 × GT→predicted
+```
 
-Output: The result is a 3D point cloud that corresponds to the object in the input image.
+The additional GT→prediction weight encourages coverage of the target surface. The selected baseline achieved **0.098957** best validation Chamfer Distance. See `v4/scripts/train_multiobject.py` and `v4/models/coverage_loss.py`.
 
-Getting Started
-1. Clone the repository
-bash
-Copy
-git clone https://github.com/yourusername/RGB2Point.git
-cd RGB2Point
-2. Install dependencies
-bash
-Copy
-pip install -r requirements.txt
-3. Set up datasets
-Download the Pix3D dataset and place it in the datasets/pix3d folder. Make sure to update the paths in eval.py accordingly.
+## Experiments and ablations
 
-4. Run the model
-bash
-Copy
-python3 eval.py
-This will evaluate the model on the Pix3D dataset, generating point clouds and saving them to the outputs/predictions folder.
+The initial v1–v3 experiments used a limited Pix3D wardrobe subset and earlier architectures. They are retained as historical experiments, **not** evidence of general-category performance.
 
-Test Coverage
-This repo includes tests for:
+A v4 geometry-aware loss added a relative bounding-box dimension objective. On validation data:
 
-Real-world dataset: Pix3D (wardrobe, chair, etc.).
+| Model | Validation Chamfer ↓ | Relative dimension error ↓ |
+|---|---:|---:|
+| Coverage-weighted baseline | **0.098957** | 14.46% |
+| Geometry-aware, dimension weight 0.100 | 0.102093 | **10.75%** |
 
-Synthetic data for training and evaluation purposes.
+The original baseline and geometry-aware runs used slightly different data-shuffling configurations, so this comparison is not perfectly controlled.
 
-Generated 3D point clouds are saved as .ply files and can be visualized using tools like Open3D.
+Additional dimension-weight experiments yielded:
 
-Summary of Test Scenarios
+| Dimension weight | Best validation Chamfer ↓ | Dimension error ↓ |
+|---|---:|---:|
+| 0.025 | 0.101222 | 13.12% |
+| 0.050 | 0.100989 | 11.08% |
+| 0.100 | 0.102093 | 10.75% |
 
-Test Scenario	Dataset	Description
-Real-world data	Pix3D	Evaluation of the model on real-world images
-Synthetic data	Custom synthetic data	Used to test generalization ability
-Point cloud visualization	All datasets	Visualized point clouds for evaluation
-Visual Output Samples
-After running the evaluation, you will find generated point clouds in outputs/predictions/. You can visualize these point clouds using Open3D or other visualization tools.
+The baseline was selected for final test evaluation because it had the lowest observed validation Chamfer Distance. Ablation scripts are in `v4/scripts/train_multiobject_ablation.py` and `v4/scripts/train_multiobject_geometry.py`.
 
-Static 3D Point Cloud:
-Visualize the predicted 3D point cloud:
+## Setup and usage
 
-Predicted 3D Point Cloud 1
+Use **Python 3.11**. The project was run on macOS Apple Silicon with MPS. `requirements.txt` records the package versions in the working environment; a fresh cross-platform installation has not been independently validated. The earlier dependency list is preserved in `requirements_legacy.txt`.
 
-Predicted 3D Point Cloud 2
+```bash
+python -m pip install -r requirements.txt
+```
 
-Predicted 3D Point Cloud 3
+Prepare the procedural dataset in `../datasets/rgb2point_v4/` with the expected metadata and referenced files. From the **repository root**, ensure the output directory exists, then run:
 
-Rotating 3D Point Cloud GIF:
-GIF animation showing the rotating 3D point cloud for better perspective.
+```bash
+mkdir -p v4/outputs
+python -m v4.scripts.train_multiobject
+python -m v4.scripts.evaluate_final_test
+python -m v4.scripts.visualize_final_test
+```
 
-Adjustable Parameters
-You can adjust the following parameters in the eval.py file or modify them in the dataset and model configurations:
+Training initializes the ViT encoder from pretrained TIMM weights, which may require an initial model download. It saves the best checkpoint to `v4/outputs/multiobject_best_model.pth`. Evaluation and visualization load that checkpoint with `pretrained=False`, then load its saved weights. **Checkpoints are not committed** due to their size, so evaluation requires a locally trained or compatible checkpoint.
 
-num_points: The number of points in the generated point cloud.
+The visualization script writes `v4/outputs/final_test_reconstructions.png`; the reported test metrics are recorded in `v4/outputs/final_test_results.log` locally.
 
-category: The category of the object (e.g., 'wardrobe', 'chair') to filter the dataset.
+## Repository guide
 
-image_size: Size of the input image (default: 224x224).
+- `v4/models/` — final ViT–Transformer model and loss functions
+- `v4/scripts/` — dataset generation, training, evaluation, ablations, visualization
+- `v4/outputs/final_test_reconstructions.png` — representative held-out examples
+- `models/`, `train_pix3d*.py`, `test_pix3d*.py`, `utils/` — earlier Pix3D work
+- `requirements.txt` — current environment dependencies
+- `requirements_legacy.txt`, `README_legacy.md` — preserved historical documentation
 
-Basic Usage Example
-Here’s how to run the model on a specific category of images:
+## Limitations and future work
 
-python
-Copy
-from datasets.pix3d_dataset import Pix3DDataset
-from models.rgb2point import RGB2Point
-import torch
+- Only 20 unique procedural objects across two categories; the test set has just two unique objects.
+- Synthetic renderings do not establish performance on real-world photos.
+- Point clouds capture coarse shape but remain diffuse; fine surfaces and occluded details are challenging.
+- Fixed output of 1,024 points, with no standalone arbitrary-image inference interface yet.
+- Data and large checkpoints are excluded from the repository; exact reproduction requires regenerating the dataset and training.
+- ShapeNetCore **was not used** in the reported experiments.
 
-model = RGB2Point()
-model.load_state_dict(torch.load('outputs/best_model.pth'))
-model.eval()
+Future work includes larger object-disjoint datasets, real-image evaluation, stronger geometry priors, and more robust inference tooling.
 
-# Example: Load the 'wardrobe' category
-pix3d_dataset = Pix3DDataset(
-    images_root="datasets/pix3d/images/",
-    annotations_file="datasets/pix3d/pix3d.json",
-    points_root="datasets/pix3d/points/",
-    category='wardrobe'
-)
+## Author
 
-# Predict and visualize point cloud
-for image, _ in pix3d_dataset:
-    with torch.no_grad():
-        pred_points = model(image.unsqueeze(0)).squeeze(0)
-    save_pointcloud(pred_points, 'output.ply')
-Limitations & Future Work
-Known Limitations:
-Limited to point cloud generation for specific categories in the dataset.
-
-Performance may degrade for certain complex objects or cluttered backgrounds.
-
-Possible Improvements:
-Add multi-category support.
-
-Improve point cloud density and visualization.
-
-Explore the use of other 3D datasets.
-
-Implement real-time prediction capabilities.
-
-Q&A
-What does the model do?
-This model takes RGB images as input and generates corresponding 3D point clouds representing the objects in those images. It is useful for applications like 3D object detection and reconstruction.
-
-How did you test your model?
-We tested the model using both synthetic and real datasets, visualized the output point clouds, and compared the results with ground truth data from Pix3D.
-
-What are the adjustable parameters?
-Key parameters include num_points (number of points per point cloud), category (object class), and image_size (input image dimensions).
-
-Team Members
-Riddhi Das: Project lead and primary developer.
+**Riddhi Das** — project lead and primary developer.

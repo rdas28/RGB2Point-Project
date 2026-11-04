@@ -1,1 +1,36 @@
 outputs/*.pth
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# macOS
+.DS_Store
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Model checkpoints
+*.pth
+*.pt
+*.ckpt
+
+# Local dataset files
+/datasets/
+/datasets
+*.obj
+
+# Temporary files
+*.tmp
+*.swp
+
+# Training logs
+/v4/outputs/*.log
+
+# Local environment settings
+.env
+.env.*
