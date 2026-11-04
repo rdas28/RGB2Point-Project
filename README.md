@@ -128,6 +128,25 @@ Training initializes the ViT encoder from pretrained TIMM weights, which may req
 
 The visualization script writes `v4/outputs/final_test_reconstructions.png`; the reported test metrics are recorded in `v4/outputs/final_test_results.log` locally.
 
+### Standalone RGB-to-3D inference
+
+Generate a 1,024-point 3D reconstruction from a single RGB image using a trained v4 checkpoint.
+
+From the repository root:
+
+```bash
+python -m v4.scripts.predict --image path/to/image.png --checkpoint v4/outputs/multiobject_best_model.pth --output v4/outputs/prediction.ply --save-npy
+
+```
+
+The script resizes images to 224 x 224 and uses MPS when available (otherwise CPU).
+
+The output is a 1,024-point ASCII PLY file. The --save-npy option also saves an array of shape (1024, 3).
+
+A compatible trained checkpoint is required and is not included in GitHub.
+
+Accuracy on arbitrary real-world photographs has not been validated.
+
 ## Repository guide
 
 - `v4/models/` — final ViT–Transformer model and loss functions
@@ -142,7 +161,7 @@ The visualization script writes `v4/outputs/final_test_reconstructions.png`; the
 - Only 20 unique procedural objects across two categories; the test set has just two unique objects.
 - Synthetic renderings do not establish performance on real-world photos.
 - Point clouds capture coarse shape but remain diffuse; fine surfaces and occluded details are challenging.
-- Fixed output of 1,024 points, with no standalone arbitrary-image inference interface yet.
+- Fixed output of 1,024 points; standalone inference is available, but accuracy on arbitrary real-world images remains unvalidated.
 - Data and large checkpoints are excluded from the repository; exact reproduction requires regenerating the dataset and training.
 - ShapeNetCore **was not used** in the reported experiments.
 
