@@ -147,6 +147,8 @@ A compatible trained checkpoint is required and is not included in GitHub.
 
 Accuracy on arbitrary real-world photographs has not been validated.
 
+For Blender dataset generation, see [Procedural Dataset Generation](v4/DATASET_GENERATION.md).
+
 ## Repository guide
 
 - `v4/models/` — final ViT–Transformer model and loss functions
