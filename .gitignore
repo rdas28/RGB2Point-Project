@@ -34,3 +34,6 @@ env/
 # Local environment settings
 .env
 .env.*
+
+# Generated training logs
+*.log
