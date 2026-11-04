@@ -3,11 +3,11 @@ import torch
 import torch.nn as nn
 
 class RGB2Point(nn.Module):
-    def __init__(self):
+    def __init__(self, pretrained=True):
         super(RGB2Point, self).__init__()
         
         # Load pretrained ViT
-        self.vit = timm.create_model('vit_base_patch16_224', pretrained=True)
+        self.vit = timm.create_model('vit_base_patch16_224', pretrained=pretrained)
         for param in self.vit.parameters():
             param.requires_grad = False
         self.vit.head = nn.Identity()

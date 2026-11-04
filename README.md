@@ -149,6 +149,19 @@ Accuracy on arbitrary real-world photographs has not been validated.
 
 For Blender dataset generation, see [Procedural Dataset Generation](v4/DATASET_GENERATION.md).
 
+
+## Pix3D v3 experiment
+
+An earlier RGB-to-point-cloud experiment uses a frozen pretrained ViT-B/16 with a fully connected point-cloud prediction head. This is a separate architecture from the v4 Transformer-decoder model.
+
+- Dataset: Pix3D wardrobe category, with object-disjoint training, validation, and test splits.
+- Held-out test set: 95 images from 2 unseen wardrobe models.
+- Mean Chamfer Distance: **0.074602** (minimum 0.058843; maximum 0.092349).
+- Mean CPU forward-pass inference time: **57.5 ms** in the local evaluation.
+- Training: `train_pix3d_v3.py`; evaluation: `test_pix3d_v3.py`; dataset loader: `data_loaders/pix3d_dataset.py`.
+
+These results are limited to a small wardrobe-only test set and are not a standard full-Pix3D benchmark. They should not be directly compared with v4 synthetic-test metrics. Pix3D data and trained checkpoints are not included in this repository; reproducing the results requires preparing the data, split annotations, and checkpoint.
+
 ## Repository guide
 
 - `v4/models/` — final ViT–Transformer model and loss functions
